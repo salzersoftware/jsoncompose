@@ -1,96 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8">
+    <title>Secure &amp; Quick JSON Formatter</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta lang="en" name="description" content="JSON Formatter that securely and quickly beautifies or minifies JSON data">
+    <meta lang="en" name="keywords" content="JSON Formatter,JSON readable,JSON secure,JSON quickly,JSON minify,JSON Format,Debug JSON,Pretty Print JSON,JSON Pretty Printer,JSON Beautifier,Beautify JSON">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="INDEX, FOLLOW">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Secure &amp; Fast JSON Formatter">
+    <meta name="twitter:description" content="Format JSON data securely, and quickly.">
+    <meta name="twitter:image" content="https://jsonformatter.curiousconcept.com/icons/jf/mstile-144x144.b0ef4bd01d6cb25ab71ae707ed7ac226.png">
+    <meta name="twitter:url" content="https://jsonformatter.curiousconcept.com">
+    <meta name="twitter:creator" content="@curiousconcept">
+    
+    <meta property="og:title" content="Secure &amp; Fast JSON Formatter">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jsoncompose.com">
+    <meta property="og:description" content="Format JSON data securely, and quickly.">      
   </head>
   <style>
     body {
-  margin: 0;
-  background: #333333;
-}
+      margin: 0;
+      background: #333333;
+    }
 
-.container {
-  display: grid;
-  grid-template-columns: 1fr 100px 1fr;
-  align-items: center;
-  height: 100vh;
-  box-sizing: border-box;
-  padding: 20px;
-  gap: 20px;
-}
+    .info {
+      padding: 20px 20px 0 20px;
+    }
 
-.large-area {
-  height: 100%;
-  padding: 20px;
-  box-sizing: border-box;
-  color: #aaaaaa;
-  background: #444444;
-  border: none;
-  border-radius: 10px;
-  outline: none;
-  resize: none;
-  font-family: monospace;
-  transition: background 0.25s, color 0.25s;
-}
+    .info > span {
+      display: block;
+      color: #aaaaaa;
+    }
 
-.large-area:hover,
-.large-area:focus {
-  background: #4a4a4a;
-}
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 100px 1fr;
+      align-items: center;
+      height: 100vh;
+      box-sizing: border-box;
+      padding: 20px;
+      gap: 20px;
+    }
 
-.large-area:focus {
-  color: #eeeeee;
-}
+    .large-area {
+      height: 100%;
+      padding: 20px;
+      box-sizing: border-box;
+      color: #aaaaaa;
+      background: #444444;
+      border: none;
+      /* border-radius: 10px; */
+      outline: none;
+      resize: none;
+      font-family: monospace;
+      transition: background 0.25s, color 0.25s;
+    }
 
-.controls__button {
-  padding: 8px 14px;
-  width: 100%;
-  margin-bottom: 10px;
-  border-radius: 5px;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  background: #009578;
-  color: #ffffff;
-  font-weight: bold;
-  font-family: "Roboto";
-}
+    .large-area:hover,
+    .large-area:focus {
+      background: #4a4a4a;
+    }
 
-.controls__button:active {
-  background: #00705a;
-}
+    .large-area:focus {
+      color: #eeeeee;
+    }
+
+    .controls__button {
+      padding: 8px 14px;
+      width: 100%;
+      margin-bottom: 10px;
+      /* border-radius: 5px; */
+      border: none;
+      outline: none;
+      cursor: pointer;
+      background: #009578;
+      color: #ffffff;
+      font-weight: bold;
+      font-family: "Roboto";
+    }
+
+    .controls__button:active {
+      background: #00705a;
+    }
 
   </style>
   <body>
+    <div class="info">
+      <span>- All formatting and minifying is done client side 📝</span>
+      <span>- Connection is SHA-256 with RSA Encryption 💪🏼</span>
+      <span>- The creator of this tool loves dogs 🐶</span>
+    </div>
     <div class="container">
-      <textarea class="large-area large-area--input" placeholder="Enter your JSON here...">
-                {"name": "Dom"}
-            </textarea>
+      <textarea id="large-area--input" class="large-area large-area--input" placeholder="Enter your JSON here 😎"></textarea>
       <div class="controls">
         <button type="button" class="controls__button controls__button--format">Format</button>
         <button type="button" class="controls__button controls__button--minify">Minify</button>
       </div>
-      <textarea readonly class="large-area large-area--output" placeholder="Your JSON will appear here..."></textarea>
+      <textarea id="large-area--output" readonly class="large-area large-area--output" placeholder="Formatted JSON will appear here 🎸"></textarea>
     </div>
     <script>
-      const inputArea = document.querySelector(".large-area--input");
-      const outputArea = document.querySelector(".large-area--output");
       const btnFormat = document.querySelector(".controls__button--format");
       const btnMinify = document.querySelector(".controls__button--minify");
 
-      btnFormat.addEventListener("click", () => {
-        const formatted = JSON.stringify(JSON.parse(inputArea.value), null, 4);
+      let wasValuePasted = false;
 
-        outputArea.value = formatted;
+      getJsonInputTextAreaEl().addEventListener("paste", (e) => {
+        // Note: At the time of this firing, the paste event will not have the pasted value
+        // assigned as the current value of the input element.
+        wasValuePasted = true;
       });
 
-      btnMinify.addEventListener("click", () => {
-        const minified = JSON.stringify(JSON.parse(inputArea.value));
+      getJsonInputTextAreaEl().addEventListener("input", (e) => {
+        if (wasValuePasted) {
+          formatJsonInputAndRenderToOutput();
 
-        outputArea.value = minified;
+          wasValuePasted = false;
+        }
       });
+
+      btnFormat.addEventListener("click", (e) => {
+        formatJsonInputAndRenderToOutput();
+      });
+
+      btnMinify.addEventListener("click", (e) => {
+        formatJsonInputAndRenderToOutput(true);
+      });
+
+      function getJsonInputTextAreaEl() {
+        return document.getElementById("large-area--input");
+      }
+
+      function getJsonOutputTextAreaEl() {
+        return document.getElementById("large-area--output");
+      }
+
+      function formatJsonInputAndRenderToOutput(shouldMinify) {
+        let formatted = "";
+        const currentInputJson = getJsonInputTextAreaEl().value;
+
+        if (!currentInputJson || currentInputJson.trim() === "") {
+          formatted = "JSON appears to be empty 🤷🏼‍♂️"
+        } else {
+          if (shouldMinify) {
+            try {
+              formatted = JSON.stringify(JSON.parse(currentInputJson));
+            }
+            catch {
+              formatted = "JSON appears to be invalid 🤷🏼‍♂️"
+            }
+          } else {
+            try {
+              formatted = JSON.stringify(JSON.parse(currentInputJson), null, 4);
+            }
+            catch {
+              formatted = "JSON appears to be invalid 🤷🏼‍♂️"
+            }            
+          }
+        }        
+
+        getJsonOutputTextAreaEl().value = formatted;
+      }
 
     </script>
 </body>
