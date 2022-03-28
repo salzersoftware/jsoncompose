@@ -103,21 +103,19 @@
     <div class="info">
       <span>- All formatting and minifying is done client side 📝</span>
       <span>- Connection is SHA-256 with RSA Encryption 💪🏼</span>
-      <span>- The creator of this tool loves dogs 🐶</span>
+      <span>- The creator of this tool is a fan of dogs 🐶 and warm weather 🌞</span>
     </div>
     <div class="container">
       <textarea id="large-area--input" class="large-area large-area--input" placeholder="Enter your JSON here 😎"></textarea>
       <div class="controls">
-        <button type="button" class="controls__button controls__button--format">Format</button>
-        <button type="button" class="controls__button controls__button--minify">Minify</button>
+        <button id="controls__button--format" type="button" class="controls__button controls__button--format">Format</button>
+        <button id="controls__button--minify" type="button" class="controls__button controls__button--minify">Minify</button>
       </div>
       <textarea id="large-area--output" readonly class="large-area large-area--output" placeholder="Formatted JSON will appear here 🎸"></textarea>
     </div>
     <script>
-      const btnFormat = document.querySelector(".controls__button--format");
-      const btnMinify = document.querySelector(".controls__button--minify");
-
       let wasValuePasted = false;
+      let successiveErrors = 0;
 
       getJsonInputTextAreaEl().addEventListener("paste", (e) => {
         // Note: At the time of this firing, the paste event will not have the pasted value
@@ -133,11 +131,11 @@
         }
       });
 
-      btnFormat.addEventListener("click", (e) => {
+      getFormatButtonEl().addEventListener("click", (e) => {
         formatJsonInputAndRenderToOutput();
       });
 
-      btnMinify.addEventListener("click", (e) => {
+      getMinifyButtonEl().addEventListener("click", (e) => {
         formatJsonInputAndRenderToOutput(true);
       });
 
@@ -149,6 +147,14 @@
         return document.getElementById("large-area--output");
       }
 
+      function getFormatButtonEl() {
+        return document.getElementById("controls__button--format");
+      }
+
+      function getMinifyButtonEl() {
+        return document.getElementById("controls__button--minify");
+      }
+
       function formatJsonInputAndRenderToOutput(shouldMinify) {
         let formatted = "";
         const currentInputJson = getJsonInputTextAreaEl().value;
@@ -156,22 +162,25 @@
         if (!currentInputJson || currentInputJson.trim() === "") {
           formatted = "JSON appears to be empty 🤷🏼‍♂️"
         } else {
-          if (shouldMinify) {
-            try {
-              formatted = JSON.stringify(JSON.parse(currentInputJson));
-            }
-            catch {
-              formatted = "JSON appears to be invalid 🤷🏼‍♂️"
-            }
-          } else {
-            try {
-              formatted = JSON.stringify(JSON.parse(currentInputJson), null, 4);
-            }
-            catch {
-              formatted = "JSON appears to be invalid 🤷🏼‍♂️"
-            }            
+          const stringifySpaces = shouldMinify ? 0 : 4;
+
+          try {
+            formatted = JSON.stringify(JSON.parse(currentInputJson), null, stringifySpaces);
+            successiveErrors = 0;
           }
-        }        
+          catch {
+            const isFirstSuccessiveError = successiveErrors === 0;
+            let errMsgAppend = "🤷🏼‍♂️";
+
+            for(let i = 0; i < successiveErrors; i++) {
+                errMsgAppend += "🤷🏼‍♂️";
+            }
+
+            formatted = "JSON" + (isFirstSuccessiveError ? "": " still") + " appears to be invalid " + errMsgAppend;
+            
+            successiveErrors++;
+          } 
+        }   
 
         getJsonOutputTextAreaEl().value = formatted;
       }
